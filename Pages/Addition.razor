@@ -1,0 +1,43 @@
+﻿@page "/addition/{PremierNombreIntial?}"
+<h3>Addition</h3>
+
+<div class="flex">
+
+    <input @bind="premierNombre" placeholder="Premier nombre" />
+    <h2>+</h2>
+    <input @bind="secondNombre" placeholder="Second nombre" />
+
+    <button  @onclick="CalculResultat">Calculer</button>
+
+    <h2>Resultat: @resultat</h2>
+</div>
+@code {
+    double premierNombre = 10;
+
+    double secondNombre = 10;
+
+    double resultat = 20;
+
+    [Parameter]
+    public string? PremierNombreIntial { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        premierNombre = 0;
+        secondNombre = 0;
+        resultat = 0;
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        premierNombre = double.Parse(PremierNombreIntial ?? "0");
+    }
+
+    void CalculResultat()
+    {
+        resultat = premierNombre + secondNombre;
+    }
+}

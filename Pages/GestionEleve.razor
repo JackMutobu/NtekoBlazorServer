@@ -1,0 +1,87 @@
+﻿@page "/eleves"
+@using System.ComponentModel.DataAnnotations;
+@using System.Text.Json;
+@inject NotificationService _notice
+
+
+<Layout>
+    <Header>
+        <Title style="margin-top:10px; color:#ffffff" Level="2">Gestion des élèves</Title>
+    </Header>
+    <Content>
+        <Form style="margin-top:10px" Model="@model"
+              OnFinish="OnValidationReussi"
+              LabelColSpan="8"
+              WrapperColSpan="12">
+            <FormItem Label="Matricule">
+                <Input @bind-Value="@context.Matricule" />
+            </FormItem>
+            <FormItem Label="Nom">
+                <Input @bind-Value="@context.Nom" />
+            </FormItem>
+            <FormItem Label="Postnom">
+                <Input @bind-Value="context.Postnom" />
+            </FormItem>
+            <FormItem Label="Lieu de naissance">
+                <Input @bind-Value="context.LieuDeNaissance" />
+            </FormItem>
+            <FormItem Label="Date de naissance">
+                <DatePicker TValue="DateTime?" Picker="@DatePickerType.Date" @bind-Value="context.DateDeNaissance" />
+            </FormItem>
+            <FormItem Label="Sex">
+                <RadioGroup @bind-Value="context.Sexe">
+                    <Radio Value="0">Masculin</Radio>
+                    <Radio Value="1">Feminin</Radio>
+                </RadioGroup>
+            </FormItem>
+
+            <FormItem WrapperColOffset="8" WrapperColSpan="16">
+                <Button Type="@ButtonType.Primary" HtmlType="submit">
+                    Enregistrer
+                </Button>
+            </FormItem>
+        </Form>
+    </Content>
+    <Footer>
+        <Table TItem="Eleve" DataSource="@eleves">
+            <Column Title="Matricule" @bind-Field="@context.Matricule" />
+            <Column Title="Nom" @bind-Field="@context.Nom" />
+            <Column Title="Postnom" @bind-Field="@context.Postnom" />
+            <Column Title="Sex" @bind-Field="@context.Sexe" />
+            <Column Title="Lieu de naissance" @bind-Field="@context.LieuDeNaissance" />
+            <Column Title="Age" Field="context.Age" />
+        </Table>
+    </Footer>
+</Layout>
+@code {
+    Eleve model = new Eleve();
+
+    List<Eleve> eleves = new List<Eleve>();
+
+    private void OnValidationReussi(EditContext editContext)
+    {
+        if (eleves.Any(x => x.Matricule == model.Matricule))
+        {
+            NoticeWithIcon(NotificationType.Error, "Erreur d'enregistrement", "Ce matricule existe déjà");
+        }
+        else
+        {
+            eleves.Add(model);
+        }
+    }
+
+    private async Task NoticeWithIcon(NotificationType type,string titre,string message)
+    {
+        await _notice.Open(new NotificationConfig()
+        {
+            Message = titre,
+            Description = message,
+            NotificationType = type
+        }) ;
+    }
+
+    private void OnValidationEchoue(EditContext editContext)
+    {
+        Console.WriteLine($"Failed:{JsonSerializer.Serialize(model)}");
+    }
+}
