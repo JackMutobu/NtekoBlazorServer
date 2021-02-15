@@ -1,7 +1,10 @@
 ﻿@page "/eleves"
 @using System.ComponentModel.DataAnnotations;
 @using System.Text.Json;
+@using BlazorAppServer.Data;
+@using Microsoft.EntityFrameworkCore;
 @inject NotificationService _notice
+@inject AppDbContext  dbContext;
 
 
 <Layout>
@@ -34,6 +37,16 @@
                     <Radio Value="1">Feminin</Radio>
                 </RadioGroup>
             </FormItem>
+            <FormItem  >
+                <SimpleSelect @bind-Value="context.ClasseId"  Placeholder="Classe"  >
+                    <SelectOptions>
+                        @foreach (var classe in classes)
+                        {
+                            <SimpleSelectOption Value="@classe.Numero" Label="@classe.Nom"></SimpleSelectOption>
+                        }
+                    </SelectOptions>
+                </SimpleSelect>
+            </FormItem>
 
             <FormItem WrapperColOffset="8" WrapperColSpan="16">
                 <Button Type="@ButtonType.Primary" HtmlType="submit">
@@ -50,24 +63,39 @@
             <Column Title="Sex" @bind-Field="@context.Sexe" />
             <Column Title="Lieu de naissance" @bind-Field="@context.LieuDeNaissance" />
             <Column Title="Age" Field="context.Age" />
+            <ActionColumn Title="Classe">
+                @context.Classe?.Nom
+            </ActionColumn>
+            <ActionColumn Title="Section">
+                @context.Classe?.Section?.Nom
+            </ActionColumn>
         </Table>
     </Footer>
 </Layout>
 @code {
     Eleve model = new Eleve();
 
+    List<Classe> classes = new List<Classe>();
+
     List<Eleve> eleves = new List<Eleve>();
+
+    protected override void OnInitialized()
+    {
+        classes = dbContext.Classes.Include(x => x.Section).ToList();
+        eleves = dbContext.Sections
+            .Include(x => x.Classes)
+            .ThenInclude(x => x.Eleves)
+            .Single(x => x.Code == "Sec001")
+            .Classes.SelectMany(x => x.Eleves)
+            .ToList();
+    }
 
     private void OnValidationReussi(EditContext editContext)
     {
-        if (eleves.Any(x => x.Matricule == model.Matricule))
-        {
-            NoticeWithIcon(NotificationType.Error, "Erreur d'enregistrement", "Ce matricule existe déjà");
-        }
-        else
-        {
-            eleves.Add(model);
-        }
+        dbContext.Eleves.Add(model);
+        dbContext.SaveChanges();
+
+        eleves = dbContext.Eleves.ToList();
     }
 
     private async Task NoticeWithIcon(NotificationType type,string titre,string message)
@@ -84,4 +112,5 @@
     {
         Console.WriteLine($"Failed:{JsonSerializer.Serialize(model)}");
     }
+
 }

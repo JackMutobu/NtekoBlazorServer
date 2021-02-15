@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -26,8 +27,14 @@ namespace BlazorAppServer
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=InscriptionEleveDb;Trusted_Connection=True;MultipleActiveResultSets=true"));
+            //services.AddDatabaseDeveloperPageExceptionFilter();
+
             services.AddRazorPages();
-            services.AddServerSideBlazor();
+            services.AddServerSideBlazor()
+                .AddCircuitOptions(options => { options.DetailedErrors = true; }); ;
             services.AddAntDesign();
             services.AddSingleton<WeatherForecastService>();
         }
